@@ -1,0 +1,10 @@
+{
+  "name": "px4-ulog-reader",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test/parse-sample.mjs",
+    "start": "node server.mjs"
+  }
+}

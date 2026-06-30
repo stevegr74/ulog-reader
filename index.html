@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PX4 ULog Reader</title>
+    <link rel="stylesheet" href="src/styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <div>
+        <h1>PX4 ULog Reader</h1>
+        <p id="fileSummary">Open a PX4 .ulg file to inspect topics, metadata, messages, and samples.</p>
+      </div>
+      <label class="fileButton">
+        <input id="fileInput" type="file" accept=".ulg,.ulog,application/octet-stream">
+        Open ULog
+      </label>
+    </header>
+
+    <main class="shell">
+      <aside class="sidebar">
+        <div class="searchBox">
+          <input id="topicSearch" type="search" placeholder="Filter topics">
+        </div>
+        <div id="topicList" class="topicList empty">No file loaded</div>
+      </aside>
+
+      <section class="workspace">
+        <nav class="tabs" aria-label="Views">
+          <button class="tab active" data-tab="overview">Overview</button>
+          <button class="tab" data-tab="topic">Topic</button>
+          <button class="tab" data-tab="metadata">Metadata</button>
+          <button class="tab" data-tab="formats">Formats</button>
+          <button class="tab" data-tab="logs">Logs</button>
+          <button class="tab" data-tab="docs">Docs</button>
+        </nav>
+
+        <section id="overview" class="panel active">
+          <div id="overviewGrid" class="metricGrid"></div>
+          <div class="sectionTitle">Parse health</div>
+          <div id="parseHealth" class="tableWrap compactTable"></div>
+          <div class="sectionTitle">Largest topics</div>
+          <div id="largestTopics" class="tableWrap"></div>
+        </section>
+
+        <section id="topic" class="panel">
+          <div class="topicHeader">
+            <div>
+              <h2 id="topicTitle">No topic selected</h2>
+              <p id="topicSubtitle"></p>
+            </div>
+            <button id="exportCsv" class="ghostButton" disabled>Export CSV</button>
+          </div>
+          <div class="plotControls">
+            <label>
+              Field
+              <select id="fieldSelect"></select>
+            </label>
+            <label>
+              Samples
+              <input id="sampleLimit" type="number" min="10" step="10" value="500">
+            </label>
+          </div>
+          <canvas id="plot" width="1100" height="320"></canvas>
+          <div class="pager">
+            <button id="prevPage" class="iconButton" title="Previous page" disabled>&lt;</button>
+            <span id="pageStatus">0-0 of 0</span>
+            <button id="nextPage" class="iconButton" title="Next page" disabled>&gt;</button>
+          </div>
+          <div id="recordTable" class="tableWrap"></div>
+        </section>
+
+        <section id="metadata" class="panel">
+          <div class="split">
+            <div>
+              <div class="sectionTitle">Information</div>
+              <div id="infoTable" class="tableWrap"></div>
+            </div>
+            <div>
+              <div class="sectionTitle">Parameters</div>
+              <div id="paramTable" class="tableWrap"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="formats" class="panel">
+          <div id="formatList" class="formatList"></div>
+        </section>
+
+        <section id="logs" class="panel">
+          <div id="logList" class="tableWrap"></div>
+        </section>
+
+        <section id="docs" class="panel">
+          <div class="docsLayout">
+            <section>
+              <h2>What This Reader Does</h2>
+              <p>
+                PX4 ULog Reader opens a local PX4 <code>.ulg</code> flight log in your browser, parses it in memory,
+                and turns the binary log into inspectable topics, rows, metadata, parameters, format definitions, and log messages.
+                The file stays on your computer; the app does not upload it anywhere.
+              </p>
+            </section>
+
+            <section>
+              <h2>Main Areas</h2>
+              <dl>
+                <dt>Topic list</dt>
+                <dd>The left sidebar shows every logged topic. Each item includes the topic name, instance number, row count, and decoded field count.</dd>
+                <dt>Overview</dt>
+                <dd>Shows file-level totals, parser health, and the largest topics by record count.</dd>
+                <dt>Topic</dt>
+                <dd>Shows one topic at a time, including a quick numeric plot, paged records, and CSV export.</dd>
+                <dt>Metadata</dt>
+                <dd>Shows ULog information messages and parameter values captured in the log.</dd>
+                <dt>Formats</dt>
+                <dd>Shows the message schemas PX4 wrote into the log. These definitions describe how each topic row is decoded.</dd>
+                <dt>Logs</dt>
+                <dd>Shows text log messages emitted by PX4 during the recording.</dd>
+              </dl>
+            </section>
+
+            <section>
+              <h2>Common Terms</h2>
+              <dl>
+                <dt>Topic</dt>
+                <dd>A named stream of repeated records, such as <code>sensor_combined#0</code> or <code>vehicle_gps_position#0</code>.</dd>
+                <dt>Record</dt>
+                <dd>One decoded row from a topic. Most records include a <code>timestamp</code> field measured in microseconds since boot.</dd>
+                <dt>Field</dt>
+                <dd>One decoded value inside a record. Arrays are shown as fields like <code>q[0]</code>, <code>q[1]</code>, and so on.</dd>
+                <dt>Format</dt>
+                <dd>The schema PX4 stores in the log so a parser knows field names, types, array lengths, and nested structures.</dd>
+                <dt>Parameter</dt>
+                <dd>A PX4 configuration value recorded in the log, useful for understanding how the vehicle was configured.</dd>
+                <dt>Dropout</dt>
+                <dd>A gap reported by the logger where data was dropped or logging was interrupted.</dd>
+                <dt>Parse error</dt>
+                <dd>A topic row that could not be decoded with its format. Zero parse errors is the healthy result.</dd>
+              </dl>
+            </section>
+
+            <section>
+              <h2>Workflow</h2>
+              <ol>
+                <li>Click <strong>Open ULog</strong> and choose a <code>.ulg</code> file.</li>
+                <li>Start in <strong>Overview</strong> to confirm the log parsed cleanly.</li>
+                <li>Use the sidebar filter to find a topic, then inspect it in <strong>Topic</strong>.</li>
+                <li>Choose a numeric field to plot, adjust the sample count, or page through rows.</li>
+                <li>Use <strong>Export CSV</strong> when you want the selected topic in another tool.</li>
+              </ol>
+            </section>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
